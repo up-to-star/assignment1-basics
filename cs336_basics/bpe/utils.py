@@ -19,7 +19,7 @@ def bytes_to_unicode_local():
     return {b: chr(c) for b, c in zip(bs, cs)}
 
 
-def load_and_sample_data(file_path: str, sample_size: int = 22000, special_token: str = "<|endoftext|>"):
+def load_and_sample_data(file_path: str, sample_size: int = 10 ** 9, special_token: str = "<|endoftext|>"):
     try:
         with open(file_path, 'r+', encoding='utf-8', errors='ignore') as f:
             with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:

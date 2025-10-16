@@ -9,6 +9,32 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <functional>
+
+struct CompareHeapElement {
+    bool operator()(const std::tuple<int, std::string, std::string>& a, 
+                   const std::tuple<int, std::string, std::string>& b) const {
+        int countA = std::get<0>(a);
+        int countB = std::get<0>(b);
+        
+        // 首先按count降序
+        if (countA != countB) {
+            return countA < countB;
+        }
+        
+        // 当count相同时，按照两个字符串拼接后的结果进行降序排序
+        const std::string& firstA = std::get<1>(a);
+        const std::string& secondA = std::get<2>(a);
+        const std::string& firstB = std::get<1>(b);
+        const std::string& secondB = std::get<2>(b);
+        
+        std::string combinedA = firstA + secondA;
+        std::string combinedB = firstB + secondB;
+        
+        return combinedA < combinedB;
+    }
+};
+
 
 struct PairHash {
   template <typename T1, typename T2>
@@ -30,7 +56,9 @@ private:
                      std::vector<std::pair<int, int>>, PairHash>
       pair_positions;
   // 最大堆，用于存储字节对出现次数和字节对
-  std::priority_queue<std::tuple<int, std::string, std::string>> heap;
+  std::priority_queue<std::tuple<int, std::string, std::string>,
+                      std::vector<std::tuple<int, std::string, std::string>>,
+                      CompareHeapElement> heap;
   // 记录堆中每个字节对的信息，快速访问
   std::unordered_map<std::pair<std::string, std::string>,
                      std::shared_ptr<std::tuple<int, std::string, std::string>>,

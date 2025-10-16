@@ -1,14 +1,14 @@
-from typing import Union, List, Tuple, Dict
-from pathlib import Path
-from utils import bytes_to_unicode_local, load_and_sample_data, save_vocab_and_merge
-import re
-from pre_tokenize import parallel_pre_tokenize
-# from bpe_index import BPEIndex
-from tqdm import tqdm
-import sys
 import os
+from tqdm import tqdm
+from pre_tokenize import parallel_pre_tokenize
+import re
+from utils import bytes_to_unicode_local, load_and_sample_data, save_vocab_and_merge
+from pathlib import Path
+from typing import Union, List, Tuple, Dict
+import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/bpeindex_cpp')
 from bpeindex_cpp import BPEIndex
+# from .bpe_index import BPEIndex
 
 
 def run_train_bpe(
@@ -88,16 +88,19 @@ def run_train_bpe(
 
 if __name__ == '__main__':
     config = {
-        "vocab_size": 10000,
-        "special_tokens": ['<|endoftext|>'],
-        "num_processes": 8,
-        "sample_size": 44000,
+        "vocab_size": 32000,
+        "special_tokens": ['<|endoftext|>', "<pad>", "<unk>"],
+        "num_processes": 12,
+        "sample_size": 220000,
     }
 
     train_path = os.path.join(os.path.dirname(
         __file__), "../../data/TinyStoriesV2-GPT4-train.txt")
     valid_path = os.path.join(os.path.dirname(
         __file__), "../../data/TinyStoriesV2-GPT4-valid.txt")
+
+    # train_path = "/home/cyj/studyspace/llm001/cs336/assignment1-basics/data/owt_train.txt"
+    # valid_path = "/home/cyj/studyspace/llm001/cs336/assignment1-basics/data/owt_valid.txt"
 
     if not Path(train_path).exists():
         raise FileNotFoundError(f"训练集文件 {train_path} 不存在")
