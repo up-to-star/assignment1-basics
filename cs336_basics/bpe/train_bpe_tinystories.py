@@ -1,7 +1,7 @@
 from typing import Union, List, Tuple, Dict
 import os
 from pathlib import Path
-from utils import bytes_to_unicode_local, load_and_sample_data
+from utils import bytes_to_unicode_local, load_and_sample_data, save_vocab_and_merge
 import re
 from pre_tokenize import parallel_pre_tokenize
 from bpe_index import BPEIndex
@@ -102,5 +102,5 @@ if __name__ == '__main__':
         raise FileNotFoundError(f"验证集文件 {valid_path} 不存在")
 
     train_vocab, train_merges = run_train_bpe(train_path, **config)
-    print(train_vocab)
-    print(train_merges)
+    save_vocab_and_merge(train_vocab, train_merges, 'vocab.json', 'merges.txt')
+    # print(train_vocab)
