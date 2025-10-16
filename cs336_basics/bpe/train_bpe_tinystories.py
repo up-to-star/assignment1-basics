@@ -1,14 +1,14 @@
 import os
 from tqdm import tqdm
-from pre_tokenize import parallel_pre_tokenize
+from .pre_tokenize import parallel_pre_tokenize
 import re
-from utils import bytes_to_unicode_local, load_and_sample_data, save_vocab_and_merge
+from .utils import bytes_to_unicode_local, load_and_sample_data, save_vocab_and_merge
 from pathlib import Path
 from typing import Union, List, Tuple, Dict
 import sys
 # sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/bpeindex_cpp')
 # from bpeindex_cpp import BPEIndex
-from bpe_index import BPEIndex
+from .bpe_index import BPEIndex
 
 
 def run_train_bpe(

@@ -5,6 +5,7 @@ import json
 
 PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
+
 class Tokenizer:
 
     def __init__(self, vocab, merges, special_tokens=None) -> None:
@@ -116,11 +117,14 @@ class Tokenizer:
         return all_bytes.decode('utf-8', errors='replace')
 
     @classmethod
-    def _load_vocab(cls, path: str) -> Dict[int, bytes]:
+    def _load_vocab(cls, path: str, is_id_to_bytes=False) -> Dict[int, bytes]:
         """加载词汇表文件"""
         with open(path, 'r', encoding='utf-8') as f:
             vocab_str = json.load(f)
-        return {int(idx): token.encode('utf-8') for idx, token in vocab_str.items()}
+        if is_id_to_bytes:
+            return {int(idx): token.encode('utf-8') for idx, token in vocab_str.items()}
+        else:
+            return {token.encode('utf-8'): int(idx) for idx, token in vocab_str.items()}
 
     @classmethod
     def _load_merges(cls, path: str) -> List[Tuple[bytes, bytes]]:
@@ -167,10 +171,14 @@ if __name__ == '__main__':
     merges.append((b"th", b"e"))  # the -> 259
 
     # 为合并后的token分配ID
-    vocab[next_id] = b"hi"; next_id += 1
-    vocab[next_id] = b"th"; next_id += 1
-    vocab[next_id] = b"er"; next_id += 1
-    vocab[next_id] = b"the"; next_id += 1
+    vocab[next_id] = b"hi"
+    next_id += 1
+    vocab[next_id] = b"th"
+    next_id += 1
+    vocab[next_id] = b"er"
+    next_id += 1
+    vocab[next_id] = b"the"
+    next_id += 1
 
     # 创建tokenizer实例
     tokenizer = Tokenizer(
