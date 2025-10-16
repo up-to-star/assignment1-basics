@@ -11,6 +11,7 @@ from torch import Tensor
 
 from cs336_basics.bpe.train_bpe_tinystories import run_train_bpe as run_train_bpe_impl
 from cs336_basics.bpe.tokenizer import Tokenizer
+from cs336_basics.layer.linear import Linear
 
 
 def run_linear(
@@ -32,7 +33,10 @@ def run_linear(
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
 
-    raise NotImplementedError
+    device, dtype = in_features.device, in_features.dtype
+    model = Linear(d_in, d_out, device=device, dtype=dtype)
+    model.load_state_dict({'weight': weights})
+    return model(in_features)
 
 
 def run_embedding(
@@ -563,7 +567,6 @@ def get_tokenizer(
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
     return Tokenizer(vocab, merges, special_tokens)
-    
 
 
 def run_train_bpe(
