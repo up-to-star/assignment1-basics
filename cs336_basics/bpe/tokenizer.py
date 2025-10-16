@@ -1,9 +1,9 @@
 import regex
 from collections import defaultdict
 from typing import Iterator, List, Tuple, Dict, Iterable
+import json
 
 PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
-
 
 class Tokenizer:
 
@@ -33,11 +33,12 @@ class Tokenizer:
                     pairs.add(pair)
             if not pairs:
                 break
-            best_pair = min(pairs, key=lambda pair: self.merges_priority_map[pair])
+            best_pair = min(
+                pairs, key=lambda pair: self.merges_priority_map[pair])
             new_parts = []
             i = 0
             while i < len(parts):
-                if i < len(parts) - 1 and (part[i], parts[i + 1]) == best_pair:
+                if i < len(parts) - 1 and (parts[i], parts[i + 1]) == best_pair:
                     new_parts.append(parts[i] + parts[i + 1])
                     i += 2
                 else:
@@ -59,7 +60,6 @@ class Tokenizer:
             chunks = regex.split(f'({special_token_pattern})', text)
         else:
             chunks = [text]
-
         final_ids = []
         for chunk in chunks:
             if not chunk:
@@ -75,12 +75,14 @@ class Tokenizer:
                         if '<unk>' in self.special_to_id:
                             final_ids.append(self.special_to_id['<unk>'])
                         else:
-                            final_ids.append(self.special_to_id.get(self.special_tokens[0], 0))
+                            final_ids.append(self.special_to_id.get(
+                                self.special_tokens[0], 0))
             else:
                 for word in regex.findall(PAT, chunk):
                     if not word:
                         continue
                     merge_pieces = self._get_bpe_merges(word.encode('utf-8'))
+                    print(merge_pieces)
                     for piece in merge_pieces:
                         if piece in self.bytes_to_id:
                             final_ids.append(self.bytes_to_id[piece])
@@ -88,7 +90,8 @@ class Tokenizer:
                             if '<unk>' in self.special_to_id:
                                 final_ids.append(self.special_to_id['<unk>'])
                             else:
-                                final_ids.append(self.special_to_id.get(self.special_tokens[0], 0))
+                                final_ids.append(self.special_to_id.get(
+                                    self.special_tokens[0], 0))
         return final_ids
 
     def encode_iterable(self, iterable: Iterable[str]) -> Iterator[int]:
@@ -114,9 +117,37 @@ class Tokenizer:
         return all_bytes.decode('utf-8', errors='replace')
 
     @classmethod
+    def _load_vocab(cls, path: str) -> Dict[int, bytes]:
+        """加载词汇表文件"""
+        with open(path, 'r', encoding='utf-8') as f:
+            vocab_str = json.load(f)
+        return {int(idx): token.encode('utf-8') for idx, token in vocab_str.items()}
+
+    @classmethod
+    def _load_merges(cls, path: str) -> List[Tuple[bytes, bytes]]:
+        """加载合并规则文件"""
+        merges = []
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) == 2:
+                    merges.append(
+                        (parts[0].encode('utf-8'), parts[1].encode('utf-8')))
+        return merges
+
+    @classmethod
     def from_files(cls, vocab_filepath: str, merges_filepath: str, special_tokens: List[str] = None):
-        with open(vocab_filepath, 'r', encoding='utf-8') as f:
-            vocab = {line.strip().split()[0]: bytes.fromhex(line.strip().split()[1]) for line in f}
-        with open(merges_filepath, 'r', encoding='utf-8') as f:
-            merges = [tuple(line.strip().split()) for line in f]
+        """从文件加载BPE模型"""
+        vocab = cls._load_vocab(vocab_filepath)
+        merges = cls._load_merges(merges_filepath)
         return cls(vocab, merges, special_tokens)
+
+
+if __name__ == '__main__':
+    special_tokens = ["<|endoftext|>", "<pad>", "<unk>"]
+    tokenizer = Tokenizer.from_files(
+        './vocab.json', './merges.txt', special_tokens)
+    text = "Hello, I am a student."
+    ids = tokenizer.encode(text)
+    # print(ids)
+    # print(tokenizer.decode(ids))
