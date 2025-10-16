@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <string>
 #include <tuple>
@@ -38,7 +39,11 @@ private:
 
 public:
   BPEIndex(const std::vector<std::vector<std::string>> &sequences);
-  std::pair<std::string, std::string> get_most_frequent_pair();
+  // 修改前
+  //   std::pair<std::string, std::string> get_most_frequent_pair();
+
+  // 修改后
+  std::optional<std::pair<std::string, std::string>> get_most_frequent_pair();
   int merge_pair(const std::pair<std::string, std::string> &pair,
                  const std::string new_token);
 

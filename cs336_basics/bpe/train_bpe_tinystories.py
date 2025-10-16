@@ -1,11 +1,14 @@
 from typing import Union, List, Tuple, Dict
-import os
 from pathlib import Path
 from utils import bytes_to_unicode_local, load_and_sample_data, save_vocab_and_merge
 import re
 from pre_tokenize import parallel_pre_tokenize
-from bpe_index import BPEIndex
+# from bpe_index import BPEIndex
 from tqdm import tqdm
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/bpeindex_cpp')
+from bpeindex_cpp import BPEIndex
 
 
 def run_train_bpe(
@@ -88,7 +91,7 @@ if __name__ == '__main__':
         "vocab_size": 10000,
         "special_tokens": ['<|endoftext|>'],
         "num_processes": 8,
-        "sample_size": 22000,
+        "sample_size": 44000,
     }
 
     train_path = os.path.join(os.path.dirname(

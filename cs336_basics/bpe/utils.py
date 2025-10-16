@@ -46,10 +46,12 @@ def load_and_sample_data(file_path: str, sample_size: int = 22000, special_token
 
 
 def save_vocab_and_merge(vocab: Dict[int, bytes], merges: List[Tuple[bytes, bytes]], vocab_path: str, merge_path: str):
-    vocab_str = {idx: token.decode('utf-8') for idx, token in vocab.items()}
+    vocab_str = {idx: token.decode('utf-8', errors='replace')
+                 for idx, token in vocab.items()}
     with open(vocab_path, 'w', encoding='utf-8') as f:
         json.dump(vocab_str, f, ensure_ascii=False, indent=2)
 
     with open(merge_path, 'w', encoding='utf-8') as f:
         for merge in merges:
-            f.write(f"{merge[0].decode('utf-8')} {merge[1].decode('utf-8')}\n")
+            f.write(
+                f"{merge[0].decode('utf-8', errors='replace')} {merge[1].decode('utf-8', errors='replace')}\n")
