@@ -6,9 +6,9 @@ from utils import bytes_to_unicode_local, load_and_sample_data, save_vocab_and_m
 from pathlib import Path
 from typing import Union, List, Tuple, Dict
 import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/bpeindex_cpp')
-from bpeindex_cpp import BPEIndex
-# from .bpe_index import BPEIndex
+# sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/bpeindex_cpp')
+# from bpeindex_cpp import BPEIndex
+from bpe_index import BPEIndex
 
 
 def run_train_bpe(
@@ -88,10 +88,10 @@ def run_train_bpe(
 
 if __name__ == '__main__':
     config = {
-        "vocab_size": 32000,
+        "vocab_size": 10000,
         "special_tokens": ['<|endoftext|>', "<pad>", "<unk>"],
         "num_processes": 12,
-        "sample_size": 220000,
+        "sample_size": 22000,
     }
 
     train_path = os.path.join(os.path.dirname(

@@ -82,7 +82,6 @@ class Tokenizer:
                     if not word:
                         continue
                     merge_pieces = self._get_bpe_merges(word.encode('utf-8'))
-                    print(merge_pieces)
                     for piece in merge_pieces:
                         if piece in self.bytes_to_id:
                             final_ids.append(self.bytes_to_id[piece])
@@ -149,5 +148,5 @@ if __name__ == '__main__':
         './vocab.json', './merges.txt', special_tokens)
     text = "Hello, I am a student."
     ids = tokenizer.encode(text)
-    # print(ids)
-    # print(tokenizer.decode(ids))
+    print(ids)
+    print(tokenizer.decode(ids))
