@@ -143,10 +143,52 @@ class Tokenizer:
 
 
 if __name__ == '__main__':
+    vocab = {}
+    merges = []
+
+    # 添加单字节token (0-255)
+    for i in range(256):
+        vocab[i] = bytes([i])
+
+    # 添加合并规则和合并后的token
+    next_id = 256
+
+    # 添加特殊token
     special_tokens = ["<|endoftext|>", "<pad>", "<unk>"]
-    tokenizer = Tokenizer.from_files(
-        './vocab.json', './merges.txt', special_tokens)
-    text = "Hello, I am a student."
+    for token in special_tokens:
+        token_bytes = token.encode('utf-8')
+        vocab[next_id] = token_bytes
+        next_id += 1
+
+    # 添加BPE合并规则
+    merges.append((b"h", b"i"))   # hi -> 256
+    merges.append((b"t", b"h"))   # th -> 257
+    merges.append((b"e", b"r"))   # er -> 258
+    merges.append((b"th", b"e"))  # the -> 259
+
+    # 为合并后的token分配ID
+    vocab[next_id] = b"hi"; next_id += 1
+    vocab[next_id] = b"th"; next_id += 1
+    vocab[next_id] = b"er"; next_id += 1
+    vocab[next_id] = b"the"; next_id += 1
+
+    # 创建tokenizer实例
+    tokenizer = Tokenizer(
+        vocab=vocab,
+        merges=merges,
+        special_tokens=special_tokens
+    )
+
+    # 测试字符串
+    text = "the tokenizer<|endoftext|>hi there!"
+
+    # 编码为ID序列
     ids = tokenizer.encode(text)
-    print(ids)
-    print(tokenizer.decode(ids))
+    print("编码后的ID序列:", ids)
+
+    # 还原ID序列为文本
+    decoded_text = tokenizer.decode(ids)
+    print("还原后的文本:", repr(decoded_text))
+
+    # 验证还原结果
+    print("还原是否正确:", decoded_text == text)
