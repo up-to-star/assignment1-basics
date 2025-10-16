@@ -8,9 +8,11 @@ class BPEIndex:
     def __init__(self, sequences: List[List[str]]):
         self.sequences = sequences
         self.pair_counts: DefaultDict[Tuple[str,
-                                            str], int] = defaultdict(int)  # 统计字节对数
+                                            # 统计字节对数
+                                            str], int] = defaultdict(int)
         self.pair_positions: DefaultDict[Tuple[str, str],
-                                         List[Tuple[int, int]]] = defaultdict(list)  # 记录字节对出现的位置
+                                         # 记录字节对出现的位置
+                                         List[Tuple[int, int]]] = defaultdict(list)
         self.heap = []  # 最大堆，存储最高频字节对
         self.heap_entries: Dict[Tuple[str, str], Any] = {}  # 记录堆中每个字节对的信息，快速访问
 
@@ -21,9 +23,10 @@ class BPEIndex:
                 self.pair_positions[pair].append((seq_idx, i))
 
         for pair, count in self.pair_counts.items():
-            entry = [-count, pair]
-            heapq.heappush(self.heap, entry)
-            self.heap_entries[pair] = entry
+            if count > 1:
+                entry = [-count, pair]
+                heapq.heappush(self.heap, entry)
+                self.heap_entries[pair] = entry
 
     def get_most_frequent_pair(self) -> Tuple[str, str]:
         while self.heap:
