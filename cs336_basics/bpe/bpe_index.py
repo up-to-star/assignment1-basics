@@ -55,7 +55,7 @@ class BPEIndex:
             last_merged_pos = -2
 
             for pos in positions:
-                if pos > len(seq) - 1 or pos < last_merged_pos:
+                if pos >= len(seq) - 1 or pos <= last_merged_pos:
                     continue
 
                 if seq[pos] != pair[0] or seq[pos + 1] != pair[1]:
@@ -67,7 +67,7 @@ class BPEIndex:
                 last_merged_pos = pos
 
                 if pos > 0:
-                    left_pair = (seq[pos - 1], seq[pos])
+                    left_pair = (seq[pos - 1], pair[0])
                     self._update_pair_count(left_pair, -1)
 
                     new_left_pair = (seq[pos - 1], new_token)
@@ -75,16 +75,16 @@ class BPEIndex:
                     self._add_position(new_left_pair, seq_idx, pos - 1)
 
                 if pos < len(seq) - 1:
-                    right_pair = (seq[pos], seq[pos + 1])
+                    right_pair = (pair[1], seq[pos + 1])
                     self._update_pair_count(right_pair, -1)
 
                     new_right_pair = (new_token, seq[pos + 1])
                     self._update_pair_count(new_right_pair, 1)
                     self._add_position(new_right_pair, seq_idx, pos)
-        if pair in self.heap_counts:
-            del self.heap_counts[pair]
-        if pair in self.heap_positions:
-            del self.heap_positions[pair]
+        if pair in self.pair_counts:
+            del self.pair_counts[pair]
+        if pair in self.pair_positions:
+            del self.pair_positions[pair]
         if pair in self.heap_entries:
             self.heap_entries[pair] = None
         return merge_count
@@ -103,7 +103,7 @@ class BPEIndex:
 
         if new_count < 0:
             new_count = 0
-            self.heap_counts[pair] = 0
+            self.pair_counts[pair] = 0
 
         if pair in self.heap_entries and self.heap_entries[pair] is not None:
             self.heap_entries[pair][0] = -new_count

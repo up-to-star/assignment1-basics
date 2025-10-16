@@ -4,6 +4,8 @@ from pathlib import Path
 from utils import bytes_to_unicode_local, load_and_sample_data
 import re
 from pre_tokenize import parallel_pre_tokenize
+from bpe_index import BPEIndex
+from tqdm import tqdm
 
 
 def run_train_bpe(
@@ -47,6 +49,39 @@ def run_train_bpe(
         documents, num_processes, bytes_to_unicode_map)
     # print(sequences[:10])
 
+    merges = []
+    bpe_index = BPEIndex(sequences)
+    vocab_progress = len(vocab)
+    total_merges = vocab_size - vocab_progress
+
+    progress_bar = tqdm(total=total_merges, desc="Train BPE",
+                        unit="merge", mininterval=0.5)
+    while vocab_progress < vocab_size:
+        best_pair = bpe_index.get_most_frequent_pair()
+        if best_pair is None:
+            break
+
+        new_token_str = best_pair[0] + best_pair[1]
+        p1_bytes = unicode_to_bytes_map[best_pair[0]]
+        p2_bytes = unicode_to_bytes_map[best_pair[1]]
+        new_token_bytes = p1_bytes + p2_bytes
+
+        merge_count = bpe_index.merge_pair(best_pair, new_token_str)
+        if merge_count == 0:
+            continue
+
+        if new_token_bytes not in existing_bytes:
+            vocab[next_token_id] = new_token_bytes
+            existing_bytes.add(new_token_bytes)
+            next_token_id += 1
+            merges.append((p1_bytes, p2_bytes))
+            vocab_progress += 1
+            progress_bar.update(1)
+        unicode_to_bytes_map[new_token_str] = new_token_bytes
+
+    progress_bar.close()
+    return vocab, merges
+
 
 if __name__ == '__main__':
     config = {
@@ -66,4 +101,6 @@ if __name__ == '__main__':
     if not Path(valid_path).exists():
         raise FileNotFoundError(f"验证集文件 {valid_path} 不存在")
 
-    run_train_bpe(train_path, **config)
+    train_vocab, train_merges = run_train_bpe(train_path, **config)
+    print(train_vocab)
+    print(train_merges)
