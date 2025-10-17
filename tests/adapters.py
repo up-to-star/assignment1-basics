@@ -14,6 +14,8 @@ from cs336_basics.bpe.tokenizer import Tokenizer
 from cs336_basics.layer.linear import Linear
 from cs336_basics.layer.embedding import Embedding
 from cs336_basics.layer.rmsnorm import RMSNorm
+from cs336_basics.layer.swiglu import SwiGLU, silu
+from cs336_basics.layer.rope import RoPE
 
 
 def run_linear(
@@ -95,7 +97,14 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+    device, dtype = in_features.device, in_features.dtype
+    model = SwiGLU(d_model, d_ff, device=device, dtype=dtype)
+    model.load_state_dict({
+        'linear1.weight': w1_weight,
+        'linear2.weight': w2_weight,
+        'linear3.weight': w3_weight,
+    })
+    return model(in_features)
 
 
 def run_scaled_dot_product_attention(
@@ -212,7 +221,9 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    device = in_query_or_key.device
+    rope = RoPE(theta, d_k, max_seq_len, device=device)
+    return rope(in_query_or_key, token_positions)
 
 
 def run_transformer_block(
@@ -407,7 +418,7 @@ def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
         Float[Tensor,"..."]: of with the same shape as `in_features` with the output of applying
         SiLU to each element.
     """
-    raise NotImplementedError
+    return silu(in_features)
 
 
 def run_get_batch(
