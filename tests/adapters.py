@@ -13,10 +13,11 @@ from cs336_basics.bpe.train_bpe_tinystories import run_train_bpe as run_train_bp
 from cs336_basics.bpe.tokenizer import Tokenizer
 from cs336_basics.layer.linear import Linear
 from cs336_basics.layer.embedding import Embedding
-from cs336_basics.layer.rmsnorm import RMSNorm
+from cs336_basics.layer.norm import RMSNorm
 from cs336_basics.layer.swiglu import SwiGLU, silu
 from cs336_basics.layer.rope import RoPE
 from cs336_basics.layer.attention import stable_softmax, ScaledDotProductAttention, CasualMultiHeadAttention
+from cs336_basics.layer.transformer import TransformerBlock
 
 
 def run_linear(
@@ -164,7 +165,8 @@ def run_multihead_self_attention(
     """
     device, dtype = in_features.device, in_features.dtype
     max_seq_len = in_features.shape[-2]
-    model = CasualMultiHeadAttention(d_model, num_heads, max_seq_len=max_seq_len, use_rope=False, device=device, dtype=dtype)
+    model = CasualMultiHeadAttention(
+        d_model, num_heads, max_seq_len=max_seq_len, use_rope=False, device=device, dtype=dtype)
     model.load_state_dict({
         'q_proj.weight': q_proj_weight,
         'k_proj.weight': k_proj_weight,
@@ -213,7 +215,8 @@ def run_multihead_self_attention_with_rope(
     """
     device, dtype = in_features.device, in_features.dtype
     max_seq_len = in_features.shape[-2]
-    model = CasualMultiHeadAttention(d_model, num_heads, max_seq_len=max_seq_len, use_rope=True, rope_theta=theta, device=device, dtype=dtype)
+    model = CasualMultiHeadAttention(d_model, num_heads, max_seq_len=max_seq_len,
+                                     use_rope=True, rope_theta=theta, device=device, dtype=dtype)
     model.load_state_dict({
         'q_proj.weight': q_proj_weight,
         'k_proj.weight': k_proj_weight,
@@ -317,7 +320,26 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    raise NotImplementedError
+    device, dtype = in_features.device, in_features.dtype
+    model = TransformerBlock(d_model, num_heads, max_seq_len, d_ff,
+                             use_rope=True, rope_theta=theta, device=device, dtype=dtype)
+    model.attn.q_proj.weight.data.copy_(weights['attn.q_proj.weight'])
+    model.attn.k_proj.weight.data.copy_(weights['attn.k_proj.weight'])
+    model.attn.v_proj.weight.data.copy_(weights['attn.v_proj.weight'])
+    model.attn.out_proj.weight.data.copy_(weights['attn.output_proj.weight'])
+
+    model.norm1.weight.data.copy_(weights['ln1.weight'])
+    model.norm2.weight.data.copy_(weights['ln2.weight'])
+
+    model.ffn.linear1.weight.data.copy_(weights['ffn.w1.weight'])
+    model.ffn.linear2.weight.data.copy_(weights['ffn.w2.weight'])
+    model.ffn.linear3.weight.data.copy_(weights['ffn.w3.weight'])
+
+    batch_size, seq_len, _ = in_features.shape
+    token_positions = torch.arange(seq_len, device=device).unsqueeze(0).expand(batch_size, -1)
+    output = model(in_features, token_positions)
+
+    return output
 
 
 def run_transformer_lm(

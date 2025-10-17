@@ -91,7 +91,7 @@ class CasualMultiHeadAttention(nn.Module):
             q = self.rope(q, token_positions)
             k = self.rope(k, token_positions)
 
-        out = self.attn(q, k, v, self.casual_mask[:seq_len, :seq_len])
+        out = self.attn(q, k, v, self.casual_mask[..., :seq_len, :seq_len])
         out = out.transpose(1, 2).contiguous().view(
             batch_size, seq_len, self.d_model)
         return self.out_proj(out)
