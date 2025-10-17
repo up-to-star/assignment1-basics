@@ -16,7 +16,7 @@ from cs336_basics.layer.embedding import Embedding
 from cs336_basics.layer.rmsnorm import RMSNorm
 from cs336_basics.layer.swiglu import SwiGLU, silu
 from cs336_basics.layer.rope import RoPE
-from cs336_basics.layer.attention import stable_softmax, ScaledDotProductAttention
+from cs336_basics.layer.attention import stable_softmax, ScaledDotProductAttention, CasualMultiHeadAttention
 
 
 def run_linear(
@@ -162,7 +162,16 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    device, dtype = in_features.device, in_features.dtype
+    max_seq_len = in_features.shape[-2]
+    model = CasualMultiHeadAttention(d_model, num_heads, max_seq_len=max_seq_len, use_rope=False, device=device, dtype=dtype)
+    model.load_state_dict({
+        'q_proj.weight': q_proj_weight,
+        'k_proj.weight': k_proj_weight,
+        'v_proj.weight': v_proj_weight,
+        'out_proj.weight': o_proj_weight,
+    })
+    return model(in_features)
 
 
 def run_multihead_self_attention_with_rope(
@@ -202,7 +211,16 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    device, dtype = in_features.device, in_features.dtype
+    max_seq_len = in_features.shape[-2]
+    model = CasualMultiHeadAttention(d_model, num_heads, max_seq_len=max_seq_len, use_rope=True, rope_theta=theta, device=device, dtype=dtype)
+    model.load_state_dict({
+        'q_proj.weight': q_proj_weight,
+        'k_proj.weight': k_proj_weight,
+        'v_proj.weight': v_proj_weight,
+        'out_proj.weight': o_proj_weight,
+    })
+    return model(in_features, token_positions)
 
 
 def run_rope(
