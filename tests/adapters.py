@@ -17,7 +17,7 @@ from cs336_basics.layer.norm import RMSNorm
 from cs336_basics.layer.swiglu import SwiGLU, silu
 from cs336_basics.layer.rope import RoPE
 from cs336_basics.layer.attention import stable_softmax, ScaledDotProductAttention, CasualMultiHeadAttention
-from cs336_basics.layer.transformer import TransformerBlock
+from cs336_basics.layer.transformer import TransformerBlock, TransfromerLM
 
 
 def run_linear(
@@ -336,7 +336,8 @@ def run_transformer_block(
     model.ffn.linear3.weight.data.copy_(weights['ffn.w3.weight'])
 
     batch_size, seq_len, _ = in_features.shape
-    token_positions = torch.arange(seq_len, device=device).unsqueeze(0).expand(batch_size, -1)
+    token_positions = torch.arange(
+        seq_len, device=device).unsqueeze(0).expand(batch_size, -1)
     output = model(in_features, token_positions)
 
     return output
@@ -421,7 +422,49 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    device = in_indices.device
+    dtype = next(iter(weights.values())).dtype
+
+    model = TransfromerLM(
+        vocab_size=vocab_size,
+        context_length=context_length,
+        num_layers=num_layers,
+        d_model=d_model,
+        num_heads=num_heads,
+        d_ff=d_ff,
+        rope_theta=rope_theta,
+        device=device,
+        dtype=dtype,
+    ).eval()
+
+    with torch.no_grad():
+        model.embedding.weight.data.copy_(weights['token_embeddings.weight'])
+
+        for layer_idx in range(num_layers):
+            block = model.blocks[layer_idx]
+            prefix = f"layers.{layer_idx}."
+            block.attn.q_proj.weight.data.copy_(
+                weights[prefix + "attn.q_proj.weight"])
+            block.attn.k_proj.weight.data.copy_(
+                weights[prefix + "attn.k_proj.weight"])
+            block.attn.v_proj.weight.data.copy_(
+                weights[prefix + "attn.v_proj.weight"])
+            block.attn.out_proj.weight.data.copy_(
+                weights[prefix + "attn.output_proj.weight"])
+            block.norm1.weight.data.copy_(weights[prefix + "ln1.weight"])
+            block.ffn.linear1.weight.data.copy_(
+                weights[prefix + "ffn.w1.weight"])
+            block.ffn.linear2.weight.data.copy_(
+                weights[prefix + "ffn.w2.weight"])
+            block.ffn.linear3.weight.data.copy_(
+                weights[prefix + "ffn.w3.weight"])
+            block.norm2.weight.data.copy_(weights[prefix + "ln2.weight"])
+
+        model.norm.weight.data.copy_(weights["ln_final.weight"])
+        model.proj.weight.data.copy_(weights["lm_head.weight"])
+
+    with torch.no_grad():
+        return model(in_indices)
 
 
 def run_rmsnorm(
