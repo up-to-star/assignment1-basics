@@ -18,7 +18,7 @@ from cs336_basics.layer.swiglu import SwiGLU, silu
 from cs336_basics.layer.rope import RoPE
 from cs336_basics.layer.attention import stable_softmax, ScaledDotProductAttention, CasualMultiHeadAttention
 from cs336_basics.layer.transformer import TransformerBlock, TransfromerLM
-from cs336_basics.loss_optimizer.loss import cross_entropy_loss, AdamW, lr_cosine_schedule
+from cs336_basics.loss_optimizer.loss_opt import cross_entropy_loss, AdamW, lr_cosine_schedule
 
 
 def run_linear(
