@@ -18,7 +18,7 @@ from cs336_basics.layer.swiglu import SwiGLU, silu
 from cs336_basics.layer.rope import RoPE
 from cs336_basics.layer.attention import stable_softmax, ScaledDotProductAttention, CasualMultiHeadAttention
 from cs336_basics.layer.transformer import TransformerBlock, TransfromerLM
-from cs336_basics.loss_optimizer.loss import cross_entropy_loss, AdamW
+from cs336_basics.loss_optimizer.loss import cross_entropy_loss, AdamW, lr_cosine_schedule
 
 
 def run_linear(
@@ -609,7 +609,7 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    raise NotImplementedError
+    return lr_cosine_schedule(it, max_learning_rate, min_learning_rate, warmup_iters, cosine_cycle_iters)
 
 
 def run_save_checkpoint(
