@@ -19,6 +19,7 @@ from cs336_basics.layer.rope import RoPE
 from cs336_basics.layer.attention import stable_softmax, ScaledDotProductAttention, CasualMultiHeadAttention
 from cs336_basics.layer.transformer import TransformerBlock, TransfromerLM
 from cs336_basics.loss_optimizer.loss_opt import cross_entropy_loss, AdamW, lr_cosine_schedule, gradient_clipping
+from cs336_basics.dataset.utils import get_batch
 
 
 def run_linear(
@@ -528,7 +529,7 @@ def run_get_batch(
         is the sampled input sequences, and the second tuple item is the corresponding
         language modeling labels.
     """
-    raise NotImplementedError
+    return get_batch(dataset, batch_size, context_length, device)
 
 
 def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:
