@@ -18,7 +18,7 @@ from cs336_basics.layer.swiglu import SwiGLU, silu
 from cs336_basics.layer.rope import RoPE
 from cs336_basics.layer.attention import stable_softmax, ScaledDotProductAttention, CasualMultiHeadAttention
 from cs336_basics.layer.transformer import TransformerBlock, TransfromerLM
-from cs336_basics.loss_optimizer.loss_opt import cross_entropy_loss, AdamW, lr_cosine_schedule
+from cs336_basics.loss_optimizer.loss_opt import cross_entropy_loss, AdamW, lr_cosine_schedule, gradient_clipping
 
 
 def run_linear(
@@ -574,7 +574,7 @@ def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm:
 
     The gradients of the parameters (parameter.grad) should be modified in-place.
     """
-    raise NotImplementedError
+    gradient_clipping(parameters, max_l2_norm)
 
 
 def get_adamw_cls() -> Any:
