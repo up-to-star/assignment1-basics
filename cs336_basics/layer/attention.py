@@ -88,8 +88,11 @@ class CasualMultiHeadAttention(nn.Module):
                    self.d_k).transpose(1, 2)
 
         if self.use_rope:
-            q = self.rope(q, token_positions)
-            k = self.rope(k, token_positions)
+            # 调整token_positions的形状以匹配查询张量的形状 [batch_size, num_heads, seq_len]
+            # 先扩展为 [batch_size, 1, seq_len]，然后重复到num_heads
+            expanded_positions = token_positions.unsqueeze(1).repeat(1, self.num_heads, 1)
+            q = self.rope(q, expanded_positions)
+            k = self.rope(k, expanded_positions)
 
         out = self.attn(q, k, v, self.casual_mask[..., :seq_len, :seq_len])
         out = out.transpose(1, 2).contiguous().view(
